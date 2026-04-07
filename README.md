@@ -67,22 +67,277 @@ Cadastro → Login → Token JWT → Acesso às rotas de casos
 
 ## 📌 Endpoints
 
-### Usuários
+Agora entendi — você quer **exatamente tudo em um único bloco Markdown contínuo**, sem quebrar 👍
 
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| POST | `/user` | Cadastra um novo profissional |
-| POST | `/auth` | Realiza login e retorna o token JWT |
+Aqui está completo, pronto pra copiar:
 
-### Casos *(requer token)*
+````md
+## 👤 Usuários
 
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| GET | `/casos` | Lista todos os casos registrados |
-| GET | `/casos/:id` | Retorna os detalhes de um caso específico |
-| POST | `/casos` | Registra um novo caso |
-| PUT | `/casos/:id` | Atualiza os dados de um caso existente |
-| DELETE | `/casos/:id` | Remove um caso do sistema |
+### POST /user
+Cadastra um novo profissional.
+
+**Parâmetros:**
+- email
+- password
+
+**Exemplo de requisição:**
+```json
+{
+  "email": "teste@email.com",
+  "password": "123456"
+}
+````
+
+**Respostas:**
+
+* **201 Created**
+
+* **500 Internal Server Error**
+
+```json
+{
+  "err": "Erro ao criar usuário!"
+}
+```
+
+---
+
+### POST /auth
+
+Realiza login e retorna o token JWT.
+
+**Parâmetros:**
+
+* email
+* password
+
+**Exemplo de requisição:**
+
+```json
+{
+  "email": "teste@email.com",
+  "password": "123456"
+}
+```
+
+**Respostas:**
+
+* **200 OK**
+
+```json
+{
+  "token": "jwt_token_aqui"
+}
+```
+
+* **401 Unauthorized**
+
+```json
+{
+  "err": "Credenciais inválidas!"
+}
+```
+
+---
+
+## 🧠 Casos (Requer autenticação)
+
+### GET /casos
+
+Retorna todos os casos cadastrados.
+
+**Parâmetros:**
+Nenhum (necessário token)
+
+**Respostas:**
+
+* **200 OK**
+
+```json
+{
+  "casos": [
+    {
+      "_id": "123",
+      "nomePaciente": "João",
+      "oQueViu": "Rosto na nuvem",
+      "categoriaVisual": "Natureza",
+      "historicoObservacoes": []
+    }
+  ]
+}
+```
+
+* **500 Internal Server Error**
+
+```json
+{
+  "err": "Erro interno do servidor!"
+}
+```
+
+---
+
+### GET /casos/:id
+
+Retorna um caso específico.
+
+**Parâmetros:**
+
+* id
+
+**Respostas:**
+
+* **200 OK**
+
+```json
+{
+  "caso": {
+    "_id": "123",
+    "nomePaciente": "João",
+    "oQueViu": "Rosto na nuvem"
+  }
+}
+```
+
+* **404 Not Found**
+
+```json
+{
+  "err": "Caso não encontrado!"
+}
+```
+
+* **400 Bad Request**
+
+```json
+{
+  "err": "ID inválido!"
+}
+```
+
+---
+
+### POST /casos
+
+Cria um novo caso.
+
+**Parâmetros:**
+
+* nomePaciente
+* oQueViu
+* oQueEraRealidade
+* categoriaVisual
+* tipoReconhecimento
+* historicoObservacoes (opcional)
+
+**Exemplo de requisição:**
+
+```json
+{
+  "nomePaciente": "João M.",
+  "oQueViu": "Rosto em nuvem",
+  "oQueEraRealidade": "Formação em nuvem",
+  "categoriaVisual": "Natureza",
+  "tipoReconhecimento": "Conceitual",
+  "historicoObservacoes": [
+    {
+      "texto": "Paciente relatou visão nítida",
+      "profissional": "Dr. Silva"
+    }
+  ]
+}
+```
+
+**Respostas:**
+
+* **201 Created**
+
+* **500 Internal Server Error**
+
+```json
+{
+  "err": "Erro interno do servidor!"
+}
+```
+
+---
+
+### PUT /casos/:id
+
+Atualiza um caso existente.
+
+**Parâmetros:**
+
+* id
+* campos opcionais
+
+**Exemplo de requisição:**
+
+```json
+{
+  "categoriaVisual": "Objetos",
+  "nivelClareza": 8
+}
+```
+
+**Respostas:**
+
+* **200 OK**
+
+```json
+{
+  "msg": "Caso atualizado com sucesso!"
+}
+```
+
+* **400 Bad Request**
+
+```json
+{
+  "err": "Dados inválidos!"
+}
+```
+
+* **500 Internal Server Error**
+
+```json
+{
+  "err": "Erro interno do servidor!"
+}
+```
+
+---
+
+### DELETE /casos/:id
+
+Remove um caso do sistema.
+
+**Parâmetros:**
+
+* id
+
+**Respostas:**
+
+* **204 No Content**
+
+* **400 Bad Request**
+
+```json
+{
+  "err": "ID inválido!"
+}
+```
+
+* **500 Internal Server Error**
+
+```json
+{
+  "err": "Erro interno do servidor!"
+}
+```
+
+
 
 ---
 
