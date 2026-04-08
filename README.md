@@ -67,11 +67,7 @@ Cadastro → Login → Token JWT → Acesso às rotas de casos
 
 ## 📌 Endpoints
 
-Agora entendi — você quer **exatamente tudo em um único bloco Markdown contínuo**, sem quebrar 👍
 
-Aqui está completo, pronto pra copiar:
-
-````md
 ## 👤 Usuários
 
 ### POST /user
