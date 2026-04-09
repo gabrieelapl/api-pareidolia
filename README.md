@@ -6,346 +6,428 @@ Pareidolia é o fenômeno psicológico em que o cérebro humano reconhece padrõ
 
 ---
 
-## 🛠 Tecnologias
-
-- **Node.js + Express** — servidor e roteamento da API
-- **MongoDB + Mongoose** — banco de dados e modelagem dos dados
-- **JWT (JSON Web Token)** — autenticação e controle de acesso
-- **bcrypt** — criptografia de senhas
-- **dotenv** — gerenciamento de variáveis de ambiente
-- **nodemon** — reinicialização automática em desenvolvimento
-
----
-
-## ⚙️ Como funciona
-
-### Autenticação
-
-O sistema utiliza autenticação baseada em **JWT**. O fluxo é o seguinte:
-
-1. O profissional se cadastra com nome, e-mail e senha
-2. A senha é criptografada com **bcrypt** antes de ser salva no banco
-3. Ao fazer login, o sistema valida as credenciais e retorna um **token JWT** com validade de 48 horas
-4. Esse token deve ser enviado no header de todas as requisições às rotas de casos:
-```
-Authorization: Bearer <token>
-```
-5. O middleware `Auth.js` intercepta cada requisição e valida o token antes de liberar o acesso
-
-Sem um token válido, qualquer tentativa de acessar os casos retorna erro `401 - Não autorizado`.
-
----
-
-### Registro de casos
-
-Após autenticado, o profissional pode registrar casos de pareidolia. Cada caso armazena as seguintes informações:
-
-| Campo | Descrição |
-|-------|-----------|
-| `nomePaciente` | Nome do paciente que relatou a percepção |
-| `oQueViu` | O que o paciente disse ter visto (ex: "Rosto em nuvem") |
-| `oQueEraRealidade` | O que o estímulo realmente era (ex: "Formação em nuvem") |
-| `categoriaVisual` | Categoria da cena observada (ex: Natureza, Ambiente doméstico) |
-| `tipoReconhecimento` | **Conceitual** — qualquer pessoa reconheceria / **Contextual** — depende do ângulo ou contexto |
-| `anguloEspecifico` | Se a percepção só ocorre de um ângulo específico |
-| `nivelClareza` | Intensidade da percepção relatada pelo paciente (escala de 1 a 10) |
-| `observacoesClinicas` | Notas adicionais do profissional sobre o caso |
-| `status` | **Pendente** (padrão ao criar) ou **Analisado** (após revisão) |
-
----
-
-### Fluxo completo da aplicação
-
-```
-Cadastro → Login → Token JWT → Acesso às rotas de casos
-                                      ↓
-                          Criar / Listar / Visualizar
-                          Atualizar status / Deletar
-```
-
----
-
-## 📌 Endpoints
-
-
-## 👤 Usuários
-
+## Endpoints de Usuários
+ 
 ### POST /user
-Cadastra um novo profissional.
-
+ 
+Esse endpoint é responsável por cadastrar um novo profissional no banco de dados.
+ 
 **Parâmetros:**
-- email
-- password
-
-**Exemplo de requisição:**
+- `name`: Nome do profissional.
+- `email`: E-mail do profissional.
+- `password`: Senha do profissional (será criptografada com bcrypt).
+ 
+Exemplo de requisição:
+ 
 ```json
 {
-  "email": "teste@email.com",
-  "password": "123456"
-}
-````
-
-**Respostas:**
-
-* **201 Created**
-
-* **500 Internal Server Error**
-
-```json
-{
-  "err": "Erro ao criar usuário!"
+    "name": "Dr. Silva",
+    "email": "dr.silva@email.com",
+    "password": "123456"
 }
 ```
-
+ 
+**Respostas:**
+ 
+✅ Criado! `201`
+ 
+Caso essa resposta aconteça, o usuário foi cadastrado com sucesso.
+ 
+Exemplo de resposta:
+ 
+```json
+{
+    "message": "Usuário clínico cadastrado com sucesso!"
+}
+```
+ 
+❌ Erro Interno do Servidor! `500`
+ 
+Caso essa resposta aconteça, significa que ocorreu um erro interno no servidor.
+ 
+Exemplo de resposta:
+ 
+```json
+{
+    "error": "Erro ao cadastrar usuário."
+}
+```
+ 
 ---
-
+ 
 ### POST /auth
-
-Realiza login e retorna o token JWT.
-
+ 
+Esse endpoint é responsável por autenticar um profissional e retornar um token JWT.
+ 
 **Parâmetros:**
-
-* email
-* password
-
-**Exemplo de requisição:**
-
+- `email`: E-mail do profissional.
+- `password`: Senha do profissional.
+ 
+Exemplo de requisição:
+ 
 ```json
 {
-  "email": "teste@email.com",
-  "password": "123456"
+    "email": "dr.silva@email.com",
+    "password": "123456"
 }
 ```
-
+ 
 **Respostas:**
-
-* **200 OK**
-
+ 
+✅ OK! `200`
+ 
+Caso essa resposta aconteça, o login foi realizado com sucesso e o token JWT foi retornado.
+ 
+Exemplo de resposta:
+ 
 ```json
 {
-  "token": "jwt_token_aqui"
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "message": "Login realizado!"
 }
 ```
-
-* **401 Unauthorized**
-
+ 
+❌ Não Autorizado! `401`
+ 
+Caso essa resposta aconteça, significa que o e-mail ou senha estão incorretos.
+ 
+Exemplo de resposta:
+ 
 ```json
 {
-  "err": "Credenciais inválidas!"
+    "error": "Credenciais inválidas."
 }
 ```
-
+ 
+❌ Erro Interno do Servidor! `500`
+ 
+Exemplo de resposta:
+ 
+```json
+{
+    "error": "Erro no login."
+}
+```
+ 
 ---
-
-## 🧠 Casos (Requer autenticação)
-
+ 
+## Endpoints de Casos
+ 
+> ⚠️ Todos os endpoints de casos requerem autenticação. Envie o token no header da requisição:
+> `Authorization: Bearer <token>`
+ 
+---
+ 
 ### GET /casos
-
-Retorna todos os casos cadastrados.
-
-**Parâmetros:**
-Nenhum (necessário token)
-
+ 
+Esse endpoint é responsável por retornar a listagem de todos os casos cadastrados no banco de dados.
+ 
+**Parâmetros:** Nenhum
+ 
 **Respostas:**
-
-* **200 OK**
-
+ 
+✅ OK! `200`
+ 
+Caso essa resposta aconteça, você vai receber a listagem de todos os casos.
+ 
+Exemplo de resposta:
+ 
 ```json
 {
-  "casos": [
-    {
-      "_id": "123",
-      "nomePaciente": "João",
-      "oQueViu": "Rosto na nuvem",
-      "categoriaVisual": "Natureza",
-      "historicoObservacoes": []
-    }
-  ]
+    "casos": [
+        {
+            "_id": "64f1a2b3c4d5e6f7a8b9c0d1",
+            "nomePaciente": "João M.",
+            "oQueViu": "Rosto em nuvem",
+            "oQueEraRealidade": "Formação em nuvem",
+            "categoriaVisual": "Natureza",
+            "tipoReconhecimento": "Conceitual",
+            "anguloEspecifico": false,
+            "nivelClareza": 7,
+            "observacoesClinicas": "Paciente relatou visão clara",
+            "historicoObservacoes": [
+                {
+                    "texto": "Paciente relatou visão muito nítida",
+                    "data": "2024-01-15T10:30:00.000Z",
+                    "profissional": "Dr. Silva"
+                }
+            ],
+            "status": "Pendente",
+            "createdAt": "2024-01-15T10:30:00.000Z"
+        }
+    ]
 }
 ```
-
-* **500 Internal Server Error**
-
+ 
+❌ Não Autorizado! `401`
+ 
+Caso essa resposta aconteça, significa que o token não foi enviado ou é inválido.
+ 
+Exemplo de resposta:
+ 
 ```json
 {
-  "err": "Erro interno do servidor!"
+    "error": "Acesso não autorizado. Faça login para continuar."
 }
 ```
-
+ 
+❌ Erro Interno do Servidor! `500`
+ 
+Exemplo de resposta:
+ 
+```json
+{
+    "error": "Erro ao listar casos."
+}
+```
+ 
 ---
-
+ 
 ### GET /casos/:id
-
-Retorna um caso específico.
-
+ 
+Esse endpoint é responsável por retornar as informações de um caso específico pelo seu ID.
+ 
 **Parâmetros:**
-
-* id
-
+- `id`: ID do caso a ser consultado.
+ 
 **Respostas:**
-
-* **200 OK**
-
+ 
+✅ OK! `200`
+ 
+Caso essa resposta aconteça, você vai receber as informações do caso solicitado.
+ 
+Exemplo de resposta:
+ 
 ```json
 {
-  "caso": {
-    "_id": "123",
-    "nomePaciente": "João",
-    "oQueViu": "Rosto na nuvem"
-  }
-}
-```
-
-* **404 Not Found**
-
-```json
-{
-  "err": "Caso não encontrado!"
-}
-```
-
-* **400 Bad Request**
-
-```json
-{
-  "err": "ID inválido!"
-}
-```
-
----
-
-### POST /casos
-
-Cria um novo caso.
-
-**Parâmetros:**
-
-* nomePaciente
-* oQueViu
-* oQueEraRealidade
-* categoriaVisual
-* tipoReconhecimento
-* historicoObservacoes (opcional)
-
-**Exemplo de requisição:**
-
-```json
-{
-  "nomePaciente": "João M.",
-  "oQueViu": "Rosto em nuvem",
-  "oQueEraRealidade": "Formação em nuvem",
-  "categoriaVisual": "Natureza",
-  "tipoReconhecimento": "Conceitual",
-  "historicoObservacoes": [
-    {
-      "texto": "Paciente relatou visão nítida",
-      "profissional": "Dr. Silva"
+    "caso": {
+        "_id": "64f1a2b3c4d5e6f7a8b9c0d1",
+        "nomePaciente": "João M.",
+        "oQueViu": "Rosto em nuvem",
+        "oQueEraRealidade": "Formação em nuvem",
+        "categoriaVisual": "Natureza",
+        "tipoReconhecimento": "Conceitual",
+        "anguloEspecifico": false,
+        "nivelClareza": 7,
+        "observacoesClinicas": "Paciente relatou visão clara",
+        "historicoObservacoes": [
+            {
+                "texto": "Paciente relatou visão muito nítida",
+                "data": "2024-01-15T10:30:00.000Z",
+                "profissional": "Dr. Silva"
+            }
+        ],
+        "status": "Pendente"
     }
-  ]
 }
 ```
-
-**Respostas:**
-
-* **201 Created**
-
-* **500 Internal Server Error**
-
+ 
+❌ Não Encontrado! `404`
+ 
+Caso essa resposta aconteça, significa que o caso com o ID fornecido não foi encontrado.
+ 
+Exemplo de resposta:
+ 
 ```json
 {
-  "err": "Erro interno do servidor!"
+    "error": "Caso não encontrado."
 }
 ```
-
+ 
+❌ Requisição Inválida! `400`
+ 
+Caso essa resposta aconteça, significa que o ID fornecido é inválido.
+ 
+Exemplo de resposta:
+ 
+```json
+{
+    "error": "ID inválido."
+}
+```
+ 
+❌ Erro Interno do Servidor! `500`
+ 
+Exemplo de resposta:
+ 
+```json
+{
+    "error": "Erro ao buscar caso."
+}
+```
+ 
 ---
-
+ 
+### POST /casos
+ 
+Esse endpoint é responsável por cadastrar um novo caso clínico no banco de dados.
+ 
+**Parâmetros:**
+- `nomePaciente`: Nome do paciente.
+- `oQueViu`: O que o paciente relatou ter visto.
+- `oQueEraRealidade`: O que o estímulo realmente era.
+- `categoriaVisual`: Categoria visual da cena observada.
+- `tipoReconhecimento`: Tipo de reconhecimento — `Conceitual` ou `Contextual`.
+- `anguloEspecifico`: Se a percepção depende de um ângulo específico (opcional).
+- `nivelClareza`: Nível de clareza percebida de 1 a 10 (opcional).
+- `observacoesClinicas`: Notas adicionais do profissional (opcional).
+- `historicoObservacoes`: Array de observações aninhadas (opcional).
+ 
+Exemplo de requisição:
+ 
+```json
+{
+    "nomePaciente": "João M.",
+    "oQueViu": "Rosto em nuvem",
+    "oQueEraRealidade": "Formação em nuvem",
+    "categoriaVisual": "Natureza",
+    "tipoReconhecimento": "Conceitual",
+    "anguloEspecifico": false,
+    "nivelClareza": 7,
+    "observacoesClinicas": "Paciente relatou visão clara",
+    "historicoObservacoes": [
+        {
+            "texto": "Paciente relatou visão muito nítida",
+            "profissional": "Dr. Silva"
+        }
+    ]
+}
+```
+ 
+**Respostas:**
+ 
+✅ Criado! `201`
+ 
+Caso essa resposta aconteça, o novo caso foi registrado com sucesso.
+ 
+Exemplo de resposta:
+ 
+```json
+{
+    "message": "Caso registrado!",
+    "caso": {
+        "_id": "64f1a2b3c4d5e6f7a8b9c0d1",
+        "nomePaciente": "João M.",
+        "status": "Pendente"
+    }
+}
+```
+ 
+❌ Erro Interno do Servidor! `500`
+ 
+Exemplo de resposta:
+ 
+```json
+{
+    "error": "Erro ao registrar caso."
+}
+```
+ 
+---
+ 
 ### PUT /casos/:id
-
-Atualiza um caso existente.
-
+ 
+Esse endpoint é responsável por atualizar as informações de um caso específico pelo seu ID.
+ 
 **Parâmetros:**
-
-* id
-* campos opcionais
-
-**Exemplo de requisição:**
-
+- `id`: ID do caso a ser atualizado.
+- Qualquer campo do caso pode ser atualizado (todos opcionais).
+ 
+Exemplo de requisição:
+ 
 ```json
 {
-  "categoriaVisual": "Objetos",
-  "nivelClareza": 8
+    "status": "Analisado",
+    "observacoesClinicas": "Caso revisado pelo Dr. Silva"
 }
 ```
-
+ 
 **Respostas:**
-
-* **200 OK**
-
+ 
+✅ OK! `200`
+ 
+Caso essa resposta aconteça, o caso foi atualizado com sucesso.
+ 
+Exemplo de resposta:
+ 
 ```json
 {
-  "msg": "Caso atualizado com sucesso!"
+    "message": "Caso atualizado!",
+    "caso": {
+        "_id": "64f1a2b3c4d5e6f7a8b9c0d1",
+        "nomePaciente": "João M.",
+        "status": "Analisado",
+        "observacoesClinicas": "Caso revisado pelo Dr. Silva"
+    }
 }
 ```
-
-* **400 Bad Request**
-
+ 
+❌ Não Encontrado! `404`
+ 
+Exemplo de resposta:
+ 
 ```json
 {
-  "err": "Dados inválidos!"
+    "error": "Caso não encontrado."
 }
 ```
-
-* **500 Internal Server Error**
-
+ 
+❌ Requisição Inválida! `400`
+ 
+Exemplo de resposta:
+ 
 ```json
 {
-  "err": "Erro interno do servidor!"
+    "error": "ID inválido."
 }
 ```
-
+ 
+❌ Erro Interno do Servidor! `500`
+ 
+Exemplo de resposta:
+ 
+```json
+{
+    "error": "Erro ao atualizar caso."
+}
+```
+ 
 ---
-
+ 
 ### DELETE /casos/:id
-
-Remove um caso do sistema.
-
+ 
+Esse endpoint é responsável por deletar um caso específico pelo seu ID.
+ 
 **Parâmetros:**
-
-* id
-
+- `id`: ID do caso a ser deletado.
+ 
 **Respostas:**
-
-* **204 No Content**
-
-* **400 Bad Request**
-
+ 
+✅ Sem Conteúdo! `204`
+ 
+Caso essa resposta aconteça, o caso foi deletado com sucesso e não há conteúdo para retornar.
+ 
+Exemplo de resposta: Nenhum conteúdo retornado.
+ 
+❌ Requisição Inválida! `400`
+ 
+Caso essa resposta aconteça, significa que o ID fornecido é inválido.
+ 
+Exemplo de resposta:
+ 
 ```json
 {
-  "err": "ID inválido!"
+    "error": "ID inválido."
 }
 ```
-
-* **500 Internal Server Error**
-
+ 
+❌ Erro Interno do Servidor! `500`
+ 
+Exemplo de resposta:
+ 
 ```json
 {
-  "err": "Erro interno do servidor!"
+    "error": "Erro ao deletar caso."
 }
-```
-
-
-
----
-
-## 📁 Estrutura do projeto
-
-```
-api-pareidolia/
-├── controllers/    → recebe as requisições e retorna as respostas
-├── services/       → contém as regras de negócio e acesso ao banco
-├── models/         → define os schemas do MongoDB (Casos e Users)
-├── routes/         → mapeia as URLs para os controllers
-├── middleware/     → validação do token JWT
-└── index.js        → inicializa o servidor e a conexão com o banco
 ```
 
