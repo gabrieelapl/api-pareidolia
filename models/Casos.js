@@ -17,7 +17,13 @@ const casoSchema = new mongoose.Schema({
         type: String, 
         enum: ['Pendente', 'Analisado'], 
         default: 'Pendente' 
-    }
+    },
+    historicoObservacoes: [
+        {
+            texto: { type: String },
+            profissional: { type: String }
+        }
+    ]
 }, { timestamps: true });
 
 const Caso = mongoose.model("Caso", casoSchema);
