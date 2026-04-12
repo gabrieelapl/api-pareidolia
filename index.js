@@ -15,7 +15,7 @@ app.use(cors());
 app.use('/', casoRoutes);
 app.use('/', userRoutes);
 
-mongoose.connect("mongodb://127.0.0.1:27017/pareidolia");
+mongoose.connect(process.env.MONGO_URI);
 
 const port = 4000;
 app.listen(port, (error) => {
